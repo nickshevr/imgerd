@@ -1,0 +1,5 @@
+.idea
+.tern-project
+# Node and NPM
+/node_modules
+npm-debug.log
