@@ -10,6 +10,7 @@ const { queryWithoutPoints } = require('../players/schemas');
 // GET /announceTournament?tournamentId=1&deposit=1000
 tournamentRouter.get('/announceTournament',
     validator(tournamentsSchema),
+    //checkSQLObject({ model: 'Tournament', _id: 'tournamentId'}),
     async (req, res, next) => {
         const tournamentId = req.query.tournamentId;
         const tournament = await models.Tournament.findOne({ where: { id: tournamentId } });
@@ -46,8 +47,6 @@ tournamentRouter.get('/joinTournament',
             if (!tournament) {
                 return next(createError.NotFound());
             }
-
-            
 
             res.json(balancesObj);
         } catch(e) {

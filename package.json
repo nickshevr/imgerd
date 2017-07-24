@@ -8,6 +8,8 @@
     "config": "^1.26.1",
     "express": "^4.15.3",
     "http-errors": "^1.6.1",
+    "lodash": "~4.17.1",
+    "morgan": "^1.8.2",
     "pg": "6.4.0",
     "pg-hstore": "^2.3.2",
     "revalidator": "^0.3.1",
@@ -15,7 +17,14 @@
     "sequelize-cli": "^2.7.0",
     "winston": "^2.3.1"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "mocha": "^3.4.2",
+    "qs": "^6.4.0",
+    "should": "^8.4.0",
+    "should-sinon": "~0.0.5",
+    "sinon": "^1.17.5",
+    "supertest": "^1.1.0"
+  },
   "scripts": {
     "forceSync": "",
     "test": "echo \"Error: no test specified\" && exit 1"
