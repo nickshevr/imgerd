@@ -29,7 +29,6 @@ tournamentRouter.get('/announceTournament',
         res.json(createdTournament);
     });
 
-// GET /joinTournament?tournamentId=1&playerId=P1&backerId=P2&backerId=P3
 // GET /joinTournament?tournamentId=1&playerId=P1&backerIds=[P2, P3]
 tournamentRouter.get('/joinTournament',
     validator(Object.assign({}, tournamentsSchema, queryWithoutPoints)),
