@@ -1,14 +1,17 @@
-exports.balanceCRUDSchema = (withPoints = false) => {
+const balanceCRUDSchema = (withPoints = false) => {
     return {
         properties: {
             playerId: {
                 type: 'string',
                 required: true,
             },
-            withPoints: {
+            points: {
                 type: 'string',
                 required: withPoints,
             }
         }
     }
 };
+
+exports.queryWithoutPoints = balanceCRUDSchema();
+exports.queryWithPoints = balanceCRUDSchema(true);

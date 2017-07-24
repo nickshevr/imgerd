@@ -1,0 +1,1 @@
+exports.tournamentsBase = require('./base');

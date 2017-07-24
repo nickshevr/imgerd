@@ -1,0 +1,5 @@
+--require should
+--require smarty-db
+--require should-sinon
+--recursive
+-t 60000
