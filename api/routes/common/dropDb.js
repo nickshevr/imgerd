@@ -1,4 +1,3 @@
-const Sequelize = require('sequelize');
 const { Router } = require('express');
 const logger = require('winston');
 const sequelizeInstance = require('../../../db/adapter');

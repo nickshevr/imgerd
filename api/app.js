@@ -4,8 +4,8 @@ const bodyParser = require('body-parser');
 const logger = require('winston');
 const morgan = require('morgan');
 
-const sequalizeInstace = require('../db/adapter');
-const models = require('../db/models');
+const sequalizeInstace = require('db/adapter');
+const models = require('db/models');
 
 const playerRoutes = require('./routes').playerRoutes.balanceCRUD;
 const commonRoutes = require('./routes').commonRoutes.dropDb;
@@ -44,7 +44,7 @@ app.use(function (err, req, res, next) {
 
 const port = config.get('server').port;
 const host = config.get('server').host;
-// { force: true }
+
 sequalizeInstace.sync({ force: true }).then((res) => {
     app.listen(port, host, function () {
         logger.info(`[Server]: Start server on port: ${port}`);
