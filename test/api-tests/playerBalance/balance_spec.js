@@ -6,7 +6,7 @@ const sequalizeInstace = require('db/adapter');
 
 describe('#{GET} /take', () => {
     before(async function() {
-       // await sequalizeInstace.sync({ force: true });
+        // await sequalizeInstace.sync({ force: true });
     });
 
     describe('Wrong query params', () => {

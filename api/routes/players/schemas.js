@@ -1,17 +1,16 @@
-const balanceCRUDSchema = (withPoints = false) => {
-    return {
-        properties: {
-            playerId: {
-                type: 'string',
-                required: true,
-            },
-            points: {
-                type: 'string',
-                required: withPoints,
-            }
-        }
-    }
+const Joi = require('joi');
+
+const withPlayerId = {
+    playerId: Joi.number().integer().min(0).required(),
 };
 
-exports.queryWithoutPoints = balanceCRUDSchema();
-exports.queryWithPoints = balanceCRUDSchema(true);
+const withPoints = {
+    points: Joi.number().integer().min(0).required()
+};
+
+exports.withPlayerId = withPlayerId;
+exports.withPoints = withPoints;
+
+exports.takeSchema = { query: Object.assign({}, withPoints, withPlayerId) };
+exports.fundSchema = { query: Object.assign({}, withPoints, withPlayerId) };
+exports.balanceSchema = { query: withPoints };

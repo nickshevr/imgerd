@@ -1,24 +1,21 @@
 const { Router } = require('express');
-const models = require('db/models');
-const { tournamentsSchema } = require('./schemas');
-const validator = require('api/middleware/reqParamsValidator');
-const sequelize = require('db/adapter');
-const tournamentRouter = new Router();
+const validate = require('express-validation');
 const createError = require('http-errors');
-const { queryWithoutPoints } = require('../players/schemas');
+const validator = require('api/middleware/reqParamsValidator');
+const models = require('db/models');
+const sequelize = require('db/adapter');
+const currentObjectGetter = require('api/middleware/currentObjectGetter');
+const { tournamentsAnnounceSchema, tournamentsJoinSchema } = require('./schemas');
+
+const tournamentRouter = new Router();
 
 // GET /announceTournament?tournamentId=1&deposit=1000
 tournamentRouter.get('/announceTournament',
-    validator(tournamentsSchema),
-    //checkSQLObject({ model: 'Tournament', _id: 'tournamentId'}),
+    validate(tournamentsAnnounceSchema),
+    currentObjectGetter('Tournament', 'tournamentId', false, true),
     async (req, res, next) => {
         const tournamentId = req.query.tournamentId;
-        const tournament = await models.Tournament.findOne({ where: { id: tournamentId } });
         const deposit = req.query.deposit;
-
-        if (tournament) {
-            return next(createError.NotAcceptable("Tournament was already created"));
-        }
 
         const createdTournament = await models.Tournament.create({
             id: tournamentId,
@@ -31,7 +28,9 @@ tournamentRouter.get('/announceTournament',
 
 // GET /joinTournament?tournamentId=1&playerId=P1&backerIds=[P2, P3]
 tournamentRouter.get('/joinTournament',
-    validator(Object.assign({}, tournamentsSchema, queryWithoutPoints)),
+    validate(tournamentsJoinSchema),
+    currentObjectGetter('Tournament', 'tournamentId'),
+    currentObjectGetter('Player', 'playerId'),
     async (req, res, next) => {
         try {
             const playerIds = [1, 2, 3];
@@ -41,11 +40,13 @@ tournamentRouter.get('/joinTournament',
                 attributes: [ 'playerId', [sequelize.fn('SUM', sequelize.col('amount')), 'balance'] ]
             });
 
-            const tournament = await models.Tournament.findOne({ where: { id: req.query.tournamentId }});
-
-            if (!tournament) {
-                return next(createError.NotFound());
+            // если некоторых людей поддержки нет в базе
+            if (Object.keys(balancesObj).length < playerIds.length) {
+                return next(createError.NotAcceptable());
             }
+
+            const tournament = req['Tournament_currentObject'];
+            const mainPlayer = req['Player_currentObject'];
 
             res.json(balancesObj);
         } catch(e) {

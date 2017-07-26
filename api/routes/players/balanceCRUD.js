@@ -1,10 +1,11 @@
 const { Router } = require('express');
 const createError = require('http-errors');
+const validate = require('express-validation');
 const models = require('db/models');
 const sequelize = require('db/adapter');
 const queryValidator = require('api/middleware/reqParamsValidator');
 const currentObjectGetter = require('api/middleware/currentObjectGetter');
-const { queryWithoutPoints, queryWithPoints } = require('./schemas');
+const { takeSchema, fundSchema, balanceSchema } = require('./schemas');
 
 const playerRouter = new Router();
 
@@ -22,7 +23,7 @@ const getPlayerBalance = async (playerId) => {
 };
 
 playerRouter.get('/take',
-    queryValidator(queryWithPoints),
+    validate(takeSchema),
     currentObjectGetter('Player', 'playerId', false),
     async (req, res, next) => {
         const player = req[`Player_currentObject`];
@@ -46,7 +47,7 @@ playerRouter.get('/take',
     });
 
 playerRouter.get('/fund',
-    queryValidator(queryWithPoints),
+    validate(fundSchema),
     currentObjectGetter('Player', 'playerId', true),
     async (req, res, next) => {
         const player = req[`Player_currentObject`];
@@ -65,7 +66,7 @@ playerRouter.get('/fund',
     });
 
 playerRouter.get('/balance',
-    queryValidator(queryWithoutPoints),
+    validate(balanceSchema),
     async (req, res) => {
         const balance = await getPlayerBalance(req.query.playerId);
         console.log(balance);
