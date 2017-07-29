@@ -69,7 +69,6 @@ playerRouter.get('/balance',
     validate(balanceSchema),
     async (req, res) => {
         const balance = await getPlayerBalance(req.query.playerId);
-        console.log(balance);
 
         res.json({
             playerId: req.query.playerId,

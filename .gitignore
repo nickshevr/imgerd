@@ -3,3 +3,5 @@
 # Node and NPM
 /node_modules
 npm-debug.log
+.nyc_output
+.nyc_output/*

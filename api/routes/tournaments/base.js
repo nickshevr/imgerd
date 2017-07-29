@@ -33,20 +33,39 @@ tournamentRouter.get('/joinTournament',
     currentObjectGetter('Player', 'playerId'),
     async (req, res, next) => {
         try {
-            const playerIds = [1, 2, 3];
+            const tournament = req['Tournament_currentObject'];
+            const mainPlayer = req['Player_currentObject'];
+
+            const backerIds = [1, 2, 3];
             const balancesObj = await models.Balance.findAll({
-                where: { playerId: { $in: playerIds }},
+                where: { playerId: { $in: backerIds }},
                 group: ['balance.playerId'],
                 attributes: [ 'playerId', [sequelize.fn('SUM', sequelize.col('amount')), 'balance'] ]
             });
 
             // если некоторых людей поддержки нет в базе
-            if (Object.keys(balancesObj).length < playerIds.length) {
+            if (Object.keys(balancesObj).length < backerIds.length) {
                 return next(createError.NotAcceptable());
             }
 
-            const tournament = req['Tournament_currentObject'];
-            const mainPlayer = req['Player_currentObject'];
+            // считаю, что это abuse и нужно запрещать
+            if (backerIds.includes(mainPlayer.id)) {
+                return next(createError.NotAcceptable());
+            }
+
+            const pointRequirement = Math.ceil(tournament.deposit / backerIds.length + 1);
+
+            for (const backerId of backerIds) {
+                if (balancesObj[backerId] < pointRequirement) {
+                    return next(createError.NotAcceptable());
+                }
+            }
+
+            if (player.balance < pointRequirement) {
+                return next(createError.NotAcceptable());
+            }
+
+            //тут транзакция на убавление баланса и добавление записи в tournamentParticipants
 
             res.json(balancesObj);
         } catch(e) {
@@ -58,6 +77,7 @@ tournamentRouter.get('/joinTournament',
 tournamentRouter.post('/resultTournament ',
     async (req, res, next) => {
         const playerId = req.query.playerId;
+        //тут транзакция на добавление баланса по записи в tournamentParticipants
     });
 
 module.exports = tournamentRouter;

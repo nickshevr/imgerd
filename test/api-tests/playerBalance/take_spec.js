@@ -2,11 +2,12 @@ const request = require('supertest');
 const app = require('api/app');
 const qs = require('qs');
 const user = request.agent(app);
+const Player = require('db/models').Player;
 const sequalizeInstace = require('db/adapter');
 
 describe('#{GET} /take', () => {
     before(async function() {
-       // await sequalizeInstace.sync({ force: true });
+        await sequalizeInstace.sync({ force: true });
     });
 
     describe('Wrong query params', () => {
@@ -39,9 +40,9 @@ describe('#{GET} /take', () => {
         });
     });
 
-    describe(`Should return error point param is not valid`, () => {
+    describe(`Should return error playerId param is not valid`, () => {
         it(`Point is't valid int`, async () => {
-            const query = qs.stringify({ playerId: 'somePlayerId' });
+            const query = qs.stringify({ playerId: 'somePlayerId', points: 100 });
             const res = await user.get(`/take?${query}`);
 
             res.body.errors[0].field.should.be.equal('playerId');
@@ -49,7 +50,7 @@ describe('#{GET} /take', () => {
         });
 
         it(`Point isn't gt 0`, async () => {
-            const query = qs.stringify({ playerId: -10 });
+            const query = qs.stringify({ playerId: -10, points: 100 });
             const res = await user.get(`/take?${query}`);
 
             res.body.errors[0].field.should.be.equal('playerId');
@@ -57,13 +58,45 @@ describe('#{GET} /take', () => {
         });
     });
 
-    it(`Should return error if user balance become lt 0`, async () => {
-        const query = qs.stringify({ playerId: 1, points: 300 });
-        const res = await user.get(`/take?${query}`);
+    describe(`Should return error playerId param is not valid`, () => {
+        it(`Point is't valid int`, async () => {
+            const query = qs.stringify({ playerId: 'somePlayerId', points: 100 });
+            const res = await user.get(`/take?${query}`);
+
+            res.body.errors[0].field.should.be.equal('playerId');
+            res.status.should.be.equal(400);
+        });
+
+        it(`Point isn't gt 0`, async () => {
+            const query = qs.stringify({ playerId: -10, points: 100 });
+            const res = await user.get(`/take?${query}`);
+
+            res.body.errors[0].field.should.be.equal('playerId');
+            res.status.should.be.equal(400);
+        });
     });
 
-    it(`Should degree player balance by point param amount`, async () => {
-        const query = qs.stringify({ playerId: 1, points: 300 });
-        const res = await user.get(`/take?${query}`);
+    describe('DB part logic', () => {
+        before(async () => {
+            const query = qs.stringify({ playerId: 1, points: 10 });
+            await user.get(`/fund?${query}`);
+        });
+
+        it(`Should return error if user balance become lt 0`, async () => {
+            const query = qs.stringify({ playerId: 1, points: 300 });
+            const res = await user.get(`/take?${query}`);
+
+            res.status.should.be.equal(406);
+            res.body.should.be.deepEqual({
+                statusCode: 406,
+                name: "NotAcceptableError",
+                message: "Balance must be gte 0"
+            });
+        });
+
+        it(`Should degree player balance by point param amount`, async () => {
+            const query = qs.stringify({ playerId: 1, points: 300 });
+            const res = await user.get(`/take?${query}`);
+        });
     });
 });
