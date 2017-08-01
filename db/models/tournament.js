@@ -45,7 +45,6 @@ Tournament.prototype.joinTournament = async function joinTournament(mainPlayer, 
         throw new Error("U cant join same tournament 2nd time");
     }
 
-    // TODO чекать мб уже участвует в этом турнире, тогда запрещать
     if (backerIds.length) {
         const balancesObj = await Balance.calculatePlayersBalances(backerIds);
 
@@ -69,6 +68,7 @@ Tournament.prototype.joinTournament = async function joinTournament(mainPlayer, 
         }
 
         // TODO обернуть в транзакцию постгресса и можно будет убрать лишние проверки при помощи валидации внутри базы
+        // + обновить объекты в таблице игроков можно 1 запросом, это быстрее
 
         await mainPlayer.updateCurrentBalance(-pointRequirement);
         await Balance.updatePlayerBalance(mainPlayer.id, -pointRequirement, 'tournament');
@@ -120,6 +120,7 @@ Tournament.prototype.resolveTournament = async function resolveTournament(winner
         const prize = participant.backerIds.length ? Math.floor(winner.prize/(participant.backerIds.length +1)) : winner.prize;
 
         //@TODO в транзакцию sequelize.tz(Promise.all())
+        // + обновить объекты в таблице игроков можно 1 запросом, это быстрее
         for (const backerId of participant.backerIds) {
             await Player.updatePlayerBalance(backerId, prize);
             await Balance.updatePlayerBalance(backerId, prize, 'tournament');
@@ -129,5 +130,5 @@ Tournament.prototype.resolveTournament = async function resolveTournament(winner
         await Balance.updatePlayerBalance(winner.playerId, prize, 'tournament');
     }
 };
-
-module.exports = Tournament;
+exports.Tournament = Tournament;
+exports.TournamentParticipant = TournamentParticipant;

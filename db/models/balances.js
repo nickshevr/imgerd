@@ -1,6 +1,7 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../adapter');
 const Player = require('./player');
+// Возможно расширить поле reason и хранить ещё id турнира, с котрого получены поинты
 
 const Balances = sequelize.define('balance', {
     amount: Sequelize.INTEGER,

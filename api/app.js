@@ -22,10 +22,6 @@ app.use(commonRoutes);
 app.use(playerRoutes);
 app.use(tournamentRoutes);
 
-app.post('/ha', (req, res, next) => {
-    res.json({ ha: 'ha'});
-});
-
 app.use((req, res) => {
     res.status(404).json({ error: 404, message: 'route not found' });
 });

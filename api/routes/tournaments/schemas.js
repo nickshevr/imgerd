@@ -12,9 +12,14 @@ const withDeposit = {
 const withBackers = {
         backerIds: Joi.array().items(Joi.number().integer().min(0))
 };
-//[{"playerId": "P1", "prize": 2000}]}
+
 const withWinners = {
-        winners: Joi.array().items()
+        winners: Joi.array().items(
+            Joi.object().keys({
+                playerId: Joi.number().integer().min(0).required(),
+                prize: Joi.number().integer().min(0).required()
+            })
+        )
 };
 
 exports.withBackers = withBackers;
