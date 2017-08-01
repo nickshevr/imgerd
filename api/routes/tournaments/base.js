@@ -35,39 +35,12 @@ tournamentRouter.get('/joinTournament',
         try {
             const tournament = req['Tournament_currentObject'];
             const mainPlayer = req['Player_currentObject'];
+            const backerIds = req.query.backerIds;
 
-            const backerIds = [1, 2, 3];
-            const balancesObj = await models.Balance.findAll({
-                where: { playerId: { $in: backerIds }},
-                group: ['balance.playerId'],
-                attributes: [ 'playerId', [sequelize.fn('SUM', sequelize.col('amount')), 'balance'] ]
-            });
+            await tournament.joinTournament(mainPlayer, Array.isArray(backerIds) ? backerIds : []);
 
-            // если некоторых людей поддержки нет в базе
-            if (Object.keys(balancesObj).length < backerIds.length) {
-                return next(createError.NotAcceptable());
-            }
 
-            // считаю, что это abuse и нужно запрещать
-            if (backerIds.includes(mainPlayer.id)) {
-                return next(createError.NotAcceptable());
-            }
-
-            const pointRequirement = Math.ceil(tournament.deposit / backerIds.length + 1);
-
-            for (const backerId of backerIds) {
-                if (balancesObj[backerId] < pointRequirement) {
-                    return next(createError.NotAcceptable());
-                }
-            }
-
-            if (player.balance < pointRequirement) {
-                return next(createError.NotAcceptable());
-            }
-
-            //тут транзакция на убавление баланса и добавление записи в tournamentParticipants
-
-            res.json(balancesObj);
+            res.json(mainPlayer);
         } catch(e) {
             return next(e);
         }

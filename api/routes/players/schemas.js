@@ -13,4 +13,4 @@ exports.withPoints = withPoints;
 
 exports.takeSchema = { query: Object.assign({}, withPoints, withPlayerId) };
 exports.fundSchema = { query: Object.assign({}, withPoints, withPlayerId) };
-exports.balanceSchema = { query: withPoints };
+exports.balanceSchema = { query: withPlayerId };
