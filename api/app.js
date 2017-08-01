@@ -15,12 +15,16 @@ const tournamentRoutes = require('./routes').tournamentRoutes.tournamentsBase;
 const app = express();
 
 app.use(morgan('combined'));
-app.use(bodyParser.json(config.get('bodyParser.json')));
-app.use(bodyParser.urlencoded(config.get('bodyParser.urlencoded')));
+app.use(bodyParser.json(config.get('bodyParser').json));
+app.use(bodyParser.urlencoded(config.get('bodyParser').urlencoded));
 
 app.use(commonRoutes);
 app.use(playerRoutes);
 app.use(tournamentRoutes);
+
+app.post('/ha', (req, res, next) => {
+    res.json({ ha: 'ha'});
+});
 
 app.use((req, res) => {
     res.status(404).json({ error: 404, message: 'route not found' });

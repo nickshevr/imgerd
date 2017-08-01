@@ -5,9 +5,9 @@ const validator = require('api/middleware/reqParamsValidator');
 const models = require('db/models');
 const sequelize = require('db/adapter');
 const currentObjectGetter = require('api/middleware/currentObjectGetter');
-const { tournamentsAnnounceSchema, tournamentsJoinSchema } = require('./schemas');
+const { tournamentsAnnounceSchema, tournamentsJoinSchema, tournamentsResultSchema } = require('./schemas');
 
-const tournamentRouter = new Router();
+const tournamentRouter = new Router({ mergeParams: true });
 
 // GET /announceTournament?tournamentId=1&deposit=1000
 tournamentRouter.get('/announceTournament',
@@ -24,7 +24,8 @@ tournamentRouter.get('/announceTournament',
         });
 
         res.json(createdTournament);
-    });
+    }
+);
 
 // GET /joinTournament?tournamentId=1&playerId=P1&backerIds=[P2, P3]
 tournamentRouter.get('/joinTournament',
@@ -39,18 +40,28 @@ tournamentRouter.get('/joinTournament',
 
             await tournament.joinTournament(mainPlayer, Array.isArray(backerIds) ? backerIds : []);
 
-
             res.json(mainPlayer);
         } catch(e) {
             return next(e);
         }
-    });
+    }
+);
 
 // {"tournamentId": "1", "winners": [{"playerId": "P1", "prize": 500}]}
-tournamentRouter.post('/resultTournament ',
+tournamentRouter.post('/resultTournament',
+    validate(tournamentsResultSchema),
+    currentObjectGetter('Tournament', 'tournamentId'),
     async (req, res, next) => {
-        const playerId = req.query.playerId;
-        //тут транзакция на добавление баланса по записи в tournamentParticipants
-    });
+        try {
+            await req['Tournament_currentObject'].resolveTournament(req.body.winners);
+
+            res.json({
+                status: 200
+            });
+        } catch(e) {
+            return next(e);
+        }
+    }
+);
 
 module.exports = tournamentRouter;

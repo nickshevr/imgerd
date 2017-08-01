@@ -23,13 +23,13 @@ Balances.calculatePlayerBalance = async playerId => {
 };
 
 Balances.calculatePlayersBalances = async playerIds => {
-    const { dataValues } = await Balances.findAll({
+    const result = await Balances.findAll({
         where: { playerId: { $in: playerIds }},
         group: ['balance.playerId'],
         attributes: [ 'playerId', [sequelize.fn('SUM', sequelize.col('amount')), 'balance'] ]
     });
 
-    return dataValues;
+    return result.map(res => res.dataValues);
 };
 
 Balances.updatePlayerBalance = async (playerId, amount, reason) => {

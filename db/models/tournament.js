@@ -1,7 +1,8 @@
 const Sequelize = require('sequelize');
 const createError = require('http-errors');
 const sequelizeInstance = require('../adapter');
-const Balance = require('./balances');
+const Balance = sequelizeInstance.model('balance');
+const Player = sequelizeInstance.model('player');
 
 const Tournament = sequelizeInstance.define('tournament', {
     deposit: {
@@ -16,16 +17,43 @@ const Tournament = sequelizeInstance.define('tournament', {
     }
 });
 
+const TournamentParticipant = sequelizeInstance.define('tournament_participant', {
+    backerIds: {
+        type: Sequelize.ARRAY(Sequelize.INTEGER)
+    }
+});
+
+TournamentParticipant.belongsTo(Player, { foreignKey: 'playerId', as: 'player' });
+TournamentParticipant.belongsTo(Tournament, { foreignKey: 'tournamentId', as: 'tournamentObject' });
+
+//const Bakers = sequelizeInstance.define('bakers');
+//TournamentParticipant.belongsToMany(Player, { foreignKey: 'backerIds', through: Bakers, as: 'Backers' });
+
 Tournament.prototype.joinTournament = async function joinTournament(mainPlayer, backerIds) {
+    if (this.status !== 'opened') {
+        throw new Error("U cant join closed tournaments");
+    }
+
+    const isAlreadyParticipant = await TournamentParticipant.findOne({
+        where: {
+            playerId: mainPlayer.id,
+            tournamentId: this.id,
+        }
+    });
+
+    if (isAlreadyParticipant) {
+        throw new Error("U cant join same tournament 2nd time");
+    }
+
     // TODO чекать мб уже участвует в этом турнире, тогда запрещать
     if (backerIds.length) {
         const balancesObj = await Balance.calculatePlayersBalances(backerIds);
 
         if (Object.keys(balancesObj).length < backerIds.length) {
-            throw Error("Wrong backersIds");
+            throw new Error("Wrong backersIds");
         }
         if (backerIds.includes(mainPlayer.id)) {
-            throw Error("U cant be a player and a backet at same time");
+            throw new Error("U cant be a player and a backet at same time");
         }
 
         const pointRequirement = Math.ceil(this.deposit / (backerIds.length + 1));
@@ -40,7 +68,7 @@ Tournament.prototype.joinTournament = async function joinTournament(mainPlayer, 
             throw new Error(`Player with id: ${mainPlayer.id} dont have enought`);
         }
 
-        // TODO обернуть в транзакцию постгресса
+        // TODO обернуть в транзакцию постгресса и можно будет убрать лишние проверки при помощи валидации внутри базы
 
         await mainPlayer.updateCurrentBalance(-pointRequirement);
         await Balance.updatePlayerBalance(mainPlayer.id, -pointRequirement, 'tournament');
@@ -49,6 +77,12 @@ Tournament.prototype.joinTournament = async function joinTournament(mainPlayer, 
             await Player.updatePlayerBalance(playerId, -pointRequirement);
             await Balance.updatePlayerBalance(playerId, -pointRequirement, 'tournament');
         }
+
+        await TournamentParticipant.create({
+            playerId: mainPlayer.id,
+            tournamentId: this.id,
+            backerIds
+        });
 
         return;
     }
@@ -61,6 +95,39 @@ Tournament.prototype.joinTournament = async function joinTournament(mainPlayer, 
 
     await mainPlayer.updateCurrentBalance(-pointRequirement);
     await Balance.updatePlayerBalance(mainPlayer.id, -pointRequirement, 'tournament');
+
+    await TournamentParticipant.create({
+        playerId: mainPlayer.id,
+        tournamentId: this.id,
+        backerIds: []
+    });
+};
+
+Tournament.prototype.resolveTournament = async function resolveTournament(winners) {
+    if (this.status === 'closed') {
+        throw new Error("Already resolved");
+    }
+
+    this.status = 'closed';
+
+    for (const winner of winners) {
+        const participant = await TournamentParticipant.findOne({ where: { tournamentId: this.id, playerId: winner.playerId }});
+
+        if (!participant) {
+            throw new Error("Cant find participant");
+        }
+
+        const prize = participant.backerIds.length ? Math.floor(winner.prize/(participant.backerIds.length +1)) : winner.prize;
+
+        //@TODO в транзакцию sequelize.tz(Promise.all())
+        for (const backerId of participant.backerIds) {
+            await Player.updatePlayerBalance(backerId, prize);
+            await Balance.updatePlayerBalance(backerId, prize, 'tournament');
+        }
+
+        await Player.updatePlayerBalance(winner.playerId, prize);
+        await Balance.updatePlayerBalance(winner.playerId, prize, 'tournament');
+    }
 };
 
 module.exports = Tournament;
