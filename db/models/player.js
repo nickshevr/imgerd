@@ -25,7 +25,7 @@ Player.updatePlayerBalance = async (playerId, difference) => {
    await Player.increment({ currentBalance: difference }, { where: { id: playerId }});
 };
 
-//TODO нужно ли? Планировался пересчет и обновление
+//TODO нужно ли? Планировался полный пересчет и обновление
 Player.recalculatePlayerBalance = async (playerId, currentBalance) => {
     try {
         await Player.update({ currentBalance }, { where: { id: playerId }});

@@ -16,10 +16,10 @@ should.Assertion.add(
 );
 
 should.Assertion.add(
-    'User',
+    'Player',
 
     function () {
-        this.params = { operator: 'to be a valid user' };
+        this.params = { operator: 'to be a valid player' };
 
         const user = this.obj;
         should.exists(user);

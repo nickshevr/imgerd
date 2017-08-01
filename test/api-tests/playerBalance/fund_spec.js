@@ -58,7 +58,12 @@ describe('#{GET} /fund', () => {
     });
 
     it(`Should increment player balance by point param amount`, async () => {
+        const playerBefore = await Player.findOne({ where: { id: 1 }});
+
         const query = qs.stringify({ playerId: 1, points: 300 });
         const res = await user.get(`/fund?${query}`);
+
+        const updatedPlayer = await Player.findOne({ where: { id: 1 }});
+        updatedPlayer.currentBalance.should.be.equal(playerBefore.currentBalance + 300);
     });
 });

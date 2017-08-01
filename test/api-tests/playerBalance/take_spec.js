@@ -78,7 +78,7 @@ describe('#{GET} /take', () => {
 
     describe('DB part logic', () => {
         before(async () => {
-            const query = qs.stringify({ playerId: 1, points: 10 });
+            const query = qs.stringify({ playerId: 1, points: 200 });
             await user.get(`/fund?${query}`);
         });
 
@@ -95,8 +95,13 @@ describe('#{GET} /take', () => {
         });
 
         it(`Should degree player balance by point param amount`, async () => {
-            const query = qs.stringify({ playerId: 1, points: 300 });
+            const playerBefore = await Player.findOne({ where: { id: 1 }});
+
+            const query = qs.stringify({ playerId: 1, points: 150 });
             const res = await user.get(`/take?${query}`);
+
+            const updatedPlayer = await Player.findOne({ where: { id: 1 }});
+            updatedPlayer.currentBalance.should.be.equal(playerBefore.currentBalance - 150);
         });
     });
 });
